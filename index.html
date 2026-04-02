@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Smart Baccarat Killer</title>
+
+<style>
+:root{
+  --bg-main:radial-gradient(circle at top,#1d2233,#0a0d14);
+  --glass:linear-gradient(180deg,rgba(25,32,55,.9),rgba(10,14,28,.9));
+  --border:rgba(120,140,255,.18);
+  --gold:#ffd86b;
+  --blue:#4da3ff;
+  --red:#ff6b6b;
+  --green:#4dffb0;
+}
+
+body{
+  font-family:"Segoe UI","Inter",Tahoma,sans-serif;
+  background:var(--bg-main);
+  color:#eef1ff;
+  margin:0;
+  letter-spacing:.2px
+}
+
+/* ===== LOGIN ===== */
+#loginBox{
+  position:fixed;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg-main);
+  z-index:9999
+}
+.loginPanel{
+  background:var(--glass);
+  padding:30px 34px;
+  border-radius:18px;
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 20px 50px rgba(0,0,0,.7);
+  width:320px;
+  text-align:center;
+  backdrop-filter:blur(6px)
+}
+.loginPanel h3{
+  margin:0 0 18px;
+  font-weight:600;
+  letter-spacing:.5px
+}
+.loginPanel input{
+  width:100%;
+  padding:12px 14px;
+  margin:7px 0;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#0b1020;
+  color:#fff;
+  font-size:15px;
+  outline:none
+}
+.loginPanel input:focus{
+  border-color:#6a7dff;
+  box-shadow:0 0 0 2px rgba(106,125,255,.25)
+}
+.loginPanel button{
+  width:100%;
+  margin-top:14px;
+  padding:13px;
+  font-size:15px;
+  font-weight:600;
+  background:linear-gradient(135deg,#3b7cff,#6aa7ff);
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  cursor:pointer
+}
+.loginErr{color:#ff7a7a;font-size:13px;margin-top:10px}
+
+/* ===== PROGRAM ===== */
+#app{display:none}
+
+header{
+  background:linear-gradient(90deg,#0f1426,#1a2140);
+  padding:18px;
+  text-align:center;
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.7),
+    inset 0 -1px 0 var(--border)
+}
+header h2{
+  margin:0;
+  font-weight:600;
+  letter-spacing:.6px
+}
+header div{
+  font-size:13px;
+  color:#b7c4ff
+}
+.expire{
+  margin-top:6px;
+  font-size:12px;
+  color:var(--gold)
+}
+
+button{
+  padding:15px 28px;
+  margin:6px;
+  font-size:15px;
+  font-weight:600;
+  border:none;
+  border-radius:14px;
+  cursor:pointer
+}
+.player{background:linear-gradient(135deg,#2b7cff,#5fa8ff)}
+.banker{background:linear-gradient(135deg,#ff5f5f,#ff8a8a)}
+.tie{background:linear-gradient(135deg,#39e7a0,#6bffc5)}
+.util{background:linear-gradient(135deg,#5b627a,#7a84a6)}
+
+.section{
+  padding:20px;
+  max-width:1000px;
+  margin:auto
+}
+
+.summary{
+  margin-top:14px;
+  padding:14px;
+  background:var(--glass);
+  border-left:4px solid var(--gold);
+  border-radius:14px;
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 10px 25px rgba(0,0,0,.55);
+  font-size:14px
+}
+
+.roadBox{
+  margin-top:16px;
+  padding:14px;
+  background:var(--glass);
+  border-radius:16px;
+  box-shadow:
+    0 0 0 1px var(--border),
+    0 10px 25px rgba(0,0,0,.55);
+  display:inline-block;   /* ล็อคขนาดตาม .road */
+}
+
+
+.roadBox b{
+  display:block;
+  margin-bottom:6px;
+  color:var(--gold)
+}
+
+.road{
+  display:inline-grid;        /* ไม่ให้ยืดเต็ม flex */
+  grid-auto-flow:column;      /* ลง 6 ช่องก่อนแล้วขึ้นคอลัมน์ */
+  grid-template-rows:repeat(6,26px);
+  gap:6px;
+}
+
+
+.dot{
+  width:26px;height:26px;
+  border-radius:50%
+}
+.dot.B{background:#ff5a5a}
+.dot.P{background:#2a7fff}
+.dot.T{background:#42e695}
+
+.lines{margin-top:18px}
+.line{
+  margin:14px 0;
+  padding:12px 14px;
+  background:var(--glass);
+  border-radius:16px
+}
+.best{box-shadow:0 0 18px rgba(77,255,176,.45)}
+
+.history{
+  display:grid;
+  grid-template-columns:repeat(12,22px);
+  gap:6px;
+  margin-top:8px
+}
+.mark{
+  width:22px;
+  height:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:13px;
+  font-weight:900;
+  border-radius:6px;
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.6),
+    inset 0 1px 0 rgba(255,255,255,.25);
+  transition:.2s;
+}
+
+.hit{
+  background:linear-gradient(145deg,#36ff8f,#14c768);
+  color:#003d1f;
+  box-shadow:
+    0 0 8px rgba(54,255,143,.7),
+    0 2px 6px rgba(0,0,0,.6);
+}
+
+.miss{
+  background:linear-gradient(145deg,#ff6b6b,#c81d1d);
+  color:#fff;
+  box-shadow:
+    0 0 8px rgba(255,0,0,.6),
+    0 2px 6px rgba(0,0,0,.6);
+}
+
+.hit:hover,
+.miss:hover{
+  transform:scale(1.15);
+}
+
+.betB{color:#ff9b9b;font-weight:700}
+.betP{color:#8ec5ff;font-weight:700}
+.betN{color:#888}
+
+@keyframes blinkScale{
+  0%{transform:scale(1.8);opacity:1}
+  50%{transform:scale(1.8);opacity:.25}
+  100%{transform:scale(1.8);opacity:1}
+}
+.blink{display:inline-block;animation:blinkScale 1s infinite}
+/* ===== DQN BOX TOP ===== */
+.dqnBox{
+  margin:18px auto;
+  max-width:1000px;
+  padding:18px 20px;
+  border-radius:18px;
+  background:linear-gradient(135deg,#ff00cc,#3333ff);
+  color:#fff;
+  font-size:18px;
+  font-weight:700;
+  text-align:center;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.2),
+    0 15px 35px rgba(0,0,0,.6),
+    0 0 25px rgba(255,0,200,.6);
+  letter-spacing:.5px;
+
+  position:relative;   /* ✅ ต้องอยู่ในนี้ */
+  overflow:hidden;     /* ✅ ต้องอยู่ในนี้ */
+}
+
+.dqnBox::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,
+    transparent 40%,
+    rgba(255,255,255,.15),
+    transparent 60%);
+  transform:translateX(-100%);
+  animation:shine 3s infinite;
+}
+
+@keyframes shine{
+  to{ transform:translateX(100%); }
+}
+
+.robotAI{
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.robotAI img{
+  width:120px;      /* ปรับขนาดรูป */
+  height:auto;
+  filter:drop-shadow(0 0 15px rgba(77,163,255,.8));
+  animation:robotFloat 3s ease-in-out infinite;
+}
+
+@keyframes robotFloat{
+  0%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+  100%{transform:translateY(0)}
+}
+
+.dqnLogo{
+  position:absolute;
+  top:-12px;
+  right:10px;
+  width:95px;
+  animation:dqnGlow 2s infinite alternate;
+}
+
+@keyframes dqnGlow{
+  from{filter:drop-shadow(0 0 6px #fff)}
+  to{filter:drop-shadow(0 0 18px #ff00ff)}
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="loginBox">
+  <div class="loginPanel">
+    <h3>🔐 Premium Login</h3>
+    <input id="user" placeholder="User">
+    <input id="pass" type="password" placeholder="Password">
+    <button onclick="login()">เข้าสู่ระบบ</button>
+    <div id="loginErr" class="loginErr"></div>
+  </div>
+</div>
+
+<div id="app">
+<header>
+  <h2>📊 Smart Baccarat Ai DQN Killer บอก ตาม-สวน</h2>
+  <div>Professional Analysis System</div>
+  <div class="expire">⏳ วันหมดอายุ : 15 เมษายน พ.ศ. 2569</div>
+
+</header>
+
+<div class="dqnBox">
+
+  <img src="dqn.png" class="dqnLogo">
+
+  <div id="dqnBox"></div>
+
+</div>
+
+<div class="section">
+<button class="player" onclick="add('P')">PLAYER</button>
+<button class="banker" onclick="add('B')">BANKER</button>
+<button class="tie" onclick="add('T')">TIE</button>
+<button class="util" onclick="undo()">UNDO</button>
+<button class="util" onclick="clearAll()">CLEAR</button>
+</div>
+
+<div class="section" style="display:flex;gap:20px;align-items:flex-start;flex-wrap:nowrap">
+
+  <div>
+    <div id="summary" class="summary"></div>
+
+    <!-- 🤖 ROBOT AI -->
+    <div class="robotAI">
+      <img src="robotcom.png">
+    </div>
+
+    <div class="roadBox">
+      <b>บีดโรด</b>
+      <div id="road" class="road"></div>
+    </div>
+
+  </div>
+
+  <div class="lines" id="lines" style="flex:1"></div>
+
+</div>
+
+<script>
+/* ===== EXPIRATION (เพิ่มอย่างเดียว) ===== */
+const expireDate=new Date("2026-04-15T23:59:59");
+if(new Date()>expireDate){
+  document.body.innerHTML=
+  "<h2 style='color:#ff6b6b;text-align:center;margin-top:20%'>⛔ โปรแกรมหมดอายุแล้ว</h2>";
+}
+
+/* ===== LOGIN ===== */
+function login(){
+  if(user.value==="1234" && pass.value==="1234"){
+    loginBox.style.display="none";
+    app.style.display="block";
+    render();
+  }else{
+    loginErr.textContent="User หรือ Password ไม่ถูกต้อง";
+  }
+}
+
+/* ===== LOGIC เดิม 100% ===== */
+let road=[];
+let lines=Array.from({length:6},()=>({
+  hit:0,miss:0,history:[],bet:null,pending:null,pct:0
+}));
+
+/* ===== DQN MODE ===== */
+let dqn = {
+  q: { P: 0, B: 0 },
+  alpha: 0.1,
+  gamma: 0.9,
+  epsilon: 0.05,
+  lastAction: null
+};
+
+dqn.stats = {
+  hit: 0,
+  miss: 0,
+  total: 0,
+  pct: 0,
+  history: []
+};
+
+const summary=document.getElementById('summary');
+const linesEl=document.getElementById('lines');
+const roadEl=document.getElementById('road');
+
+function add(r){
+
+  // ===== DQN LEARNING =====
+  if(dqn.lastAction){
+
+  if(dqn.lastAction === r){
+    dqn.stats.hit++;
+    dqn.stats.history.push('H');
+ }
+    else{
+    dqn.stats.miss++;
+    dqn.stats.history.push('M');
+  }
+
+if (dqn.stats.history.length > 48) {
+  dqn.stats.history.shift();
+}
+
+  dqn.stats.total++;
+  dqn.stats.pct = Math.round(
+    (dqn.stats.hit / dqn.stats.total) * 100
+  );
+
+  let reward = (dqn.lastAction === r) ? 1 : -1;
+    let maxNext = Math.max(dqn.q.P, dqn.q.B);
+
+    dqn.q[dqn.lastAction] =
+      dqn.q[dqn.lastAction] +
+      dqn.alpha * (reward + dqn.gamma * maxNext - dqn.q[dqn.lastAction]);
+  }
+
+  // ===== ระบบเดิม (ห้ามลบ) =====
+  lines.forEach(l=>{
+    if(l.pending){
+      l.pending===r?(l.hit++,l.history.push('H')):(l.miss++,l.history.push('M'));
+    }
+  });
+
+  road.push(r);
+  predict().forEach((p,i)=>lines[i].bet=lines[i].pending=p);
+
+  // ===== DQN DECISION =====
+  let action;
+  if(Math.random() < dqn.epsilon){
+    action = Math.random() < 0.5 ? 'P' : 'B';
+  }else{
+    action = dqn.q.P >= dqn.q.B ? 'P' : 'B';
+  }
+
+  dqn.lastAction = action;
+
+  render();
+}
+
+
+
+function undo(){if(!road.length)return;road.pop();recalc();}
+function clearAll(){
+  road=[];
+  lines.forEach(l=>Object.assign(l,{
+    hit:0,miss:0,history:[],bet:null,pending:null,pct:0
+  }));
+
+  dqn.q = {P:0,B:0};
+  dqn.lastAction = null;
+
+// 🔥 ใส่ตรงนี้
+  dqn.stats = {
+    hit:0,
+    miss:0,
+    total:0,
+    pct:0,
+    history:[]
+  };
+
+  render();
+}
+
+
+function recalc(){let t=[...road];clearAll();t.forEach(add);}
+
+function predict(){
+  let p=road.filter(x=>x==='P').length;
+  let b=road.filter(x=>x==='B').length;
+  let last=road.at(-1);
+  let r=[];
+  r[0]=b>p?'B':'P';
+  r[1]=last||null;
+  r[2]=last?(last==='B'?'P':'B'):null;
+  r[3]=b>=p?'B':'P';
+  let s=1;
+  for(let i=road.length-1;i>0;i--){if(road[i]===road[i-1])s++;else break;}
+  r[4]=s>=2?last:null;
+  r[5]=s>=2?(last==='B'?'P':'B'):null;
+  return r;
+}
+
+function render(){
+  roadEl.innerHTML=road.map(r=>`<div class="dot ${r}"></div>`).join('');
+  lines.forEach(l=>{let t=l.hit+l.miss;l.pct=(l.bet&&t)?Math.round(l.hit/t*100):0;});
+
+  let active=lines.filter(l=>(l.bet==='B'||l.bet==='P')&&(l.hit+l.miss));
+  let maxAcc=active.length?Math.max(...active.map(l=>l.pct)):0;
+  let blinkLines=active.filter(l=>l.pct===maxAcc);
+  let blinkP=blinkLines.filter(l=>l.bet==='P').length;
+  let blinkB=blinkLines.filter(l=>l.bet==='B').length;
+
+  summary.innerHTML=
+  `📊 <b>เงื่อนไข</b><br>
+   สาย % สูงสุด = ${maxAcc}%<br>
+   จำนวนสาย Blink = ${blinkLines.length} สาย<br>
+   Blink P = ${blinkP} | Blink B = ${blinkB}<br><hr>
+   TOTAL = ${road.length} ตา<br>
+   P = ${road.filter(x=>x==='P').length}
+   | B = ${road.filter(x=>x==='B').length}
+   | T = ${road.filter(x=>x==='T').length}`;
+// ===== แสดง DQN =====
+let html = lines.map((l,i)=>{
+  let betTxt='–',betCls='betN';
+  if(l.bet==='B'){betTxt='B';betCls='betB'}
+  if(l.bet==='P'){betTxt='P';betCls='betP'}
+  let blink=(l.bet&&(l.hit+l.miss)&&l.pct===maxAcc);
+
+  return `<div class="line ${blink?'best':''}">
+    สาย ${i+1}: แทง <span class="${betCls} ${blink?'blink':''}">${betTxt}</span> |
+    ✔ ${l.hit} ❌ ${l.miss} | ${l.pct}%
+    <div class="history">
+    ${l.history.map(x=>x==='H'
+    ?'<span class="mark hit">✔</span>'
+    :'<span class="mark miss">✖</span>').join('')}
+    </div>
+  </div>`;
+}).join('');
+
+// 🔥 AI ADVICE SYSTEM
+
+if(dqn.stats.total === 0){
+
+  adviceText = 'ยังไม่มีข้อมูล AI กำลังเริ่มระบบ';
+  adviceColor = '#9aa4ff';
+
+}
+else if(dqn.stats.total < 3){
+
+  adviceText = 'AI กำลังเรียนรู้ (รอข้อมูลอย่างน้อย 3 ตา)';
+  adviceColor = '#9aa4ff';
+
+}
+else if(dqn.stats.pct > 50){
+
+  adviceText = 'ตานี้ควรเล่นตาม';
+  adviceColor = '#4dffb0';
+
+}
+else if(dqn.stats.pct < 50){
+
+  adviceText = 'ตานี้ควรเล่นสวน';
+  adviceColor = '#ff6b6b';
+
+}
+else{
+
+  adviceText = '50% กลางพอดี จะหยุดรอ หรือ จะตาม หรือ จะสวน ตัวแทง DQN Mode ผู้เล่นควรตัดสินใจเองได้';
+  adviceColor = '#ffd86b';
+}
+
+
+document.getElementById('dqnBox').innerHTML = `
+  DQN MODE
+<br>
+แทง <span style="font-size:26px">
+${dqn.lastAction || '-'}
+</span>
+<br>
+✔ ${dqn.stats.hit} |
+❌ ${dqn.stats.miss} |
+%
+<span style="
+color:${dqn.stats.pct>=60?'#4dffb0':
+        dqn.stats.pct>=50?'#ffd86b':'#ff6b6b'};
+">
+${dqn.stats.pct}%
+</span>
+
+<br><br>
+
+<div style="
+font-size:18px;
+font-weight:800;
+color:${adviceColor};
+margin-bottom:8px;
+">
+${adviceText}
+</div>
+
+<div style="
+display:grid;
+grid-template-columns:repeat(12,22px);
+gap:8px;
+justify-content:center;
+margin-top:8px;
+">
+${dqn.stats.history.map(x=>x==='H'
+  ?'<div class="mark hit">✔</div>'
+  :'<div class="mark miss">✖</div>'
+).join('')}
+</div>
+
+<br>
+Q(P) = ${dqn.q.P.toFixed(2)}
+| Q(B) = ${dqn.q.B.toFixed(2)}
+`;
+linesEl.innerHTML = html;}
+
+
+</script>
+
+</body>
+</html>
